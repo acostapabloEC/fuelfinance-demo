@@ -600,6 +600,37 @@ async def ask(req: AskRequest):
             "  Fintex Ltd      — $800/mo (Starter) — has a disputed charge, watch this one."
         )
 
+    elif any(w in q for w in ["yoy", "year over year", "year-over-year", "variance", "prior year", "vs last year", "compared to last"]):
+        # June 2025 actuals (prior year)
+        py = {"mrr": 18000, "cogs": 4500, "payroll": 22000, "other_opex": 3200, "cash": 95000}
+        cy = {"mrr": 44000, "cogs": 9800, "payroll": 30000, "other_opex": 4000, "cash": 240000}
+        def gp(d): return d["mrr"] - d["cogs"]
+        def ebitda(d): return d["mrr"] - d["cogs"] - d["payroll"] - d["other_opex"]
+        def gm(d): return gp(d) / d["mrr"] * 100
+        def em(d): return ebitda(d) / d["mrr"] * 100
+        def delta(a, b): return f"{'+' if b-a>=0 else ''}${b-a:,.0f}"
+        def dpct(a, b): return f"{(b-a)/abs(a)*100:+.1f}%"
+        answer = (
+            "## YoY Income Statement — June 2025 vs June 2026\n\n"
+            "| Line Item | Jun 2025 | Jun 2026 | $ Δ | % Δ |\n"
+            "|-----------|--------:|---------:|----:|----:|\n"
+            f"| Revenue (MRR) | ${py['mrr']:,} | **${cy['mrr']:,}** | {delta(py['mrr'],cy['mrr'])} | {dpct(py['mrr'],cy['mrr'])} |\n"
+            f"| COGS | (${py['cogs']:,}) | **(${cy['cogs']:,})** | {delta(py['cogs'],cy['cogs'])} | {dpct(py['cogs'],cy['cogs'])} |\n"
+            f"| Gross Profit | ${gp(py):,} | **${gp(cy):,}** | {delta(gp(py),gp(cy))} | {dpct(gp(py),gp(cy))} |\n"
+            f"| Gross Margin | {gm(py):.1f}% | **{gm(cy):.1f}%** | — | {gm(cy)-gm(py):+.1f}pp |\n"
+            f"| Payroll | (${py['payroll']:,}) | **(${cy['payroll']:,})** | {delta(py['payroll'],cy['payroll'])} | {dpct(py['payroll'],cy['payroll'])} |\n"
+            f"| Other OpEx | (${py['other_opex']:,}) | **(${cy['other_opex']:,})** | {delta(py['other_opex'],cy['other_opex'])} | {dpct(py['other_opex'],cy['other_opex'])} |\n"
+            f"| EBITDA | ${ebitda(py):,} | **${ebitda(cy):,}** | {delta(ebitda(py),ebitda(cy))} | — |\n"
+            f"| EBITDA Margin | {em(py):.1f}% | **{em(cy):.1f}%** | — | {em(cy)-em(py):+.1f}pp |\n"
+            f"| Cash | ${py['cash']:,} | **${cy['cash']:,}** | {delta(py['cash'],cy['cash'])} | {dpct(py['cash'],cy['cash'])} |\n\n"
+            "### Key takeaways\n"
+            f"• Revenue grew **{dpct(py['mrr'],cy['mrr'])}** YoY — from $18k to $44k MRR\n"
+            f"• Gross margin expanded **{gm(cy)-gm(py):+.1f}pp** — better unit economics at scale\n"
+            f"• EBITDA improved by **{delta(ebitda(py),ebitda(cy))}** — near breakeven vs a loss last year\n"
+            f"• Cash position strengthened by **{delta(py['cash'],cy['cash'])}** — 2.5x stronger balance sheet\n"
+            f"• Payroll grew {dpct(py['payroll'],cy['payroll'])} — headcount investment tracking revenue growth"
+        )
+
     elif any(w in q for w in ["ebitda", "profit", "p&l", "income", "margin"]):
         answer = (
             "## P&L — June 2026 (accrual basis)\n\n"

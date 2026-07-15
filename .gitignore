@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.env
+reports/
+data_export/
+*.json
+bq_key.json

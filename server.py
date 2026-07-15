@@ -229,20 +229,23 @@ async def ask(req: AskRequest):
 
     elif any(w in q for w in ["forecast", "proforma", "pro forma", "dec", "year end", "h2", "second half"]):
         fc = md.FORECAST
+        fs = md.FORECAST_SUMMARY
+        header = "## Forecast — Jul to Dec 2026\n\n"
+        header += "| Month | MRR | ARR | Gross Burn | EBITDA | Margin | Cash |\n"
+        header += "|-------|----:|----:|-----------:|-------:|-------:|-----:|\n"
         rows = "\n".join(
-            f"  {f['month']:10s}  MRR ${f['mrr']:>7,.0f}  ARR ${f['arr']:>9,.0f}  EBITDA {'+' if f['ebitda'] >= 0 else ''}${f['ebitda']:,.0f} ({f['ebitda_margin_pct']}%)  Cash ${f['cash']:,.0f}"
+            f"| {f['month']} | ${f['mrr']/1000:.0f}k | ${f['arr']/1000:.0f}k | $43.8k | {'+' if f['ebitda'] >= 0 else ''}${f['ebitda']/1000:.1f}k | {f['ebitda_margin_pct']}% | ${f['cash']/1000:.0f}k |"
             for f in fc
         )
-        fs = md.FORECAST_SUMMARY
         answer = (
-            "Forecast — Jul to Dec 2026 (base case with planned hires):\n\n"
-            f"{rows}\n\n"
-            f"Key milestones:\n"
-            f"  • ARR Jun 2026: ${fs['arr_jun_2026']:,.0f}\n"
-            f"  • ARR Dec 2026: ${fs['arr_dec_2026']:,.0f} ({fs['arr_growth_h2_pct']}% H2 growth)\n"
-            f"  • $1M ARR: {fs['key_milestone']}\n"
-            f"  • Cash Dec 2026: ${fs['cash_dec_2026']:,.0f} ({fs['runway_dec_2026_months']:.1f} months runway)\n\n"
-            f"Risk: {fs['key_risk']}"
+            header + rows + "\n\n"
+            f"### Key milestones\n"
+            f"• ARR Jun 2026: **${fs['arr_jun_2026']:,.0f}**\n"
+            f"• ARR Dec 2026: **${fs['arr_dec_2026']:,.0f}** ({fs['arr_growth_h2_pct']}% H2 growth)\n"
+            f"• $1M ARR: **{fs['key_milestone']}**\n"
+            f"• Cash Dec 2026: **${fs['cash_dec_2026']:,.0f}** ({fs['runway_dec_2026_months']:.1f} months runway)\n\n"
+            f"### Risk\n"
+            f"• {fs['key_risk']}"
         )
         chart = {
             "type": "line",

@@ -112,6 +112,14 @@
 
   /* ── Charts ── */
   .chart-wrap { margin-top: 10px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #07070f; padding: 16px 18px 12px; }
+  .tbl-wrap { overflow-x: auto; margin: 10px 0; }
+  .tbl-wrap table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .tbl-wrap th { text-align: right; padding: 6px 10px; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .tbl-wrap th:first-child { text-align: left; }
+  .tbl-wrap td { text-align: right; padding: 6px 10px; color: var(--text); border-bottom: 1px solid var(--border); }
+  .tbl-wrap td:first-child { text-align: left; color: var(--muted); font-weight: 500; }
+  .tbl-wrap tr:last-child td { border-bottom: none; }
+  .tbl-wrap tr:hover td { background: #0d0d1f; }
   .chart-wrap svg { display: block; width: 100%; overflow: visible; }
   .chart-title { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
 
@@ -232,18 +240,34 @@
     const esc    = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     const inline = s => esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code>$1</code>');
     const lines  = text.split('\n');
-    let html = '', inUl = false, inOl = false;
-    const closeList = () => { if (inUl) { html += '</ul>'; inUl = false; } if (inOl) { html += '</ol>'; inOl = false; } };
+    let html = '', inUl = false, inOl = false, inTable = false, tableHeader = false;
+    const closeList  = () => { if (inUl) { html += '</ul>'; inUl = false; } if (inOl) { html += '</ol>'; inOl = false; } };
+    const closeTable = () => { if (inTable) { html += '</tbody></table>'; inTable = false; tableHeader = false; } };
+    const isTableRow = l => l.startsWith('|') && l.endsWith('|');
+    const isSepRow   = l => /^\|[-| :]+\|$/.test(l.replace(/\s/g,''));
     for (const raw of lines) {
-      const line = raw.trimStart();
-      if      (line.startsWith('## '))               { closeList(); html += `<h2>${inline(line.slice(3))}</h2>`; }
-      else if (line.startsWith('### '))              { closeList(); html += `<h3>${inline(line.slice(4))}</h3>`; }
-      else if (/^\d+\.\s/.test(line))               { if (inUl) { html += '</ul>'; inUl = false; } if (!inOl) { html += '<ol>'; inOl = true; } html += `<li>${inline(line.replace(/^\d+\.\s/,''))}</li>`; }
-      else if (line.startsWith('• ') || line.startsWith('* ')) { if (inOl) { html += '</ol>'; inOl = false; } if (!inUl) { html += '<ul>'; inUl = true; } html += `<li>${inline(line.slice(2))}</li>`; }
-      else if (line === '')                          { closeList(); }
-      else                                           { closeList(); html += `<p>${inline(line)}</p>`; }
+      const line = raw.trim();
+      if (isTableRow(line)) {
+        if (isSepRow(line)) { html += '</thead><tbody>'; tableHeader = false; continue; }
+        const cells = line.slice(1,-1).split('|').map(c => c.trim());
+        if (!inTable) {
+          closeList();
+          html += '<div class="tbl-wrap"><table><thead>';
+          inTable = true; tableHeader = true;
+        }
+        const tag = tableHeader ? 'th' : 'td';
+        html += '<tr>' + cells.map(c => `<${tag}>${inline(c)}</${tag}>`).join('') + '</tr>';
+        continue;
+      }
+      closeTable();
+      if      (line.startsWith('## '))                           { closeList(); html += `<h2>${inline(line.slice(3))}</h2>`; }
+      else if (line.startsWith('### '))                          { closeList(); html += `<h3>${inline(line.slice(4))}</h3>`; }
+      else if (/^\d+\.\s/.test(line))                           { if (inUl) { html += '</ul>'; inUl = false; } if (!inOl) { html += '<ol>'; inOl = true; } html += `<li>${inline(line.replace(/^\d+\.\s/,''))}</li>`; }
+      else if (line.startsWith('• ') || line.startsWith('* '))  { if (inOl) { html += '</ol>'; inOl = false; } if (!inUl) { html += '<ul>'; inUl = true; } html += `<li>${inline(line.slice(2))}</li>`; }
+      else if (line === '')                                       { closeList(); }
+      else                                                        { closeList(); html += `<p>${inline(line)}</p>`; }
     }
-    closeList();
+    closeList(); closeTable();
     return html;
   }
 

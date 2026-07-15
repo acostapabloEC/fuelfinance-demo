@@ -393,6 +393,23 @@ async def ask(req: AskRequest):
             "CEO and CTO on below-market draws — compensated via equity (28% and 22%)."
         )
 
+    elif any(w in q for w in ["runway", "cash", "burn", "months left", "scenario"]):
+        answer = (
+            "## Cash & Runway — June 2026\n\n"
+            "### Position\n"
+            f"• Cash on hand: **$240,000**\n"
+            f"• Gross burn: $43,800/mo\n"
+            f"• MRR (accrual): $44,000/mo → net burn: **~$0** (breakeven)\n"
+            f"• Runway: **24 months** (conservative, incl. AR timing delays)\n\n"
+            "### What inflates June cash receipts\n"
+            "• Orbits paid $12k annual upfront — only $1k is June revenue; $11k is deferred\n"
+            "• DataCore paid $16.8k quarterly — only $5.6k earned; $11.2k is deferred\n"
+            "• $22,200 total sits in Revenue in QB — needs a journal entry to Deferred Revenue\n\n"
+            "### Forecast\n"
+            "• Cash grows to ~$267k by Dec 2026 on base case pipeline\n"
+            "• Hiring plan (2 AEs + 1 Eng + 1 CSM) compresses runway to 13 months — manageable if Series A closes Q1 2027"
+        )
+
     elif any(w in q for w in ["mrr", "arr", "recurring", "revenue"]):
         answer = (
             f"## MRR / ARR — June 2026\n\n"
@@ -411,22 +428,7 @@ async def ask(req: AskRequest):
             f"144% MRR growth in H1 2026. Forecast: $80k MRR ($960k ARR) by Dec."
         )
 
-    elif any(w in q for w in ["runway", "cash", "burn", "months left"]):
-        answer = (
-            "## Cash & Runway — June 2026\n\n"
-            "### Position\n"
-            f"• Cash on hand: **$240,000**\n"
-            f"• Gross burn: $43,800/mo\n"
-            f"• MRR (accrual): $44,000/mo → net burn: **~$0** (breakeven)\n"
-            f"• Runway: **24 months** (conservative, incl. AR timing delays)\n\n"
-            "### What inflates June cash receipts\n"
-            "• Orbits paid $12k annual upfront — only $1k is June revenue; $11k is deferred\n"
-            "• DataCore paid $16.8k quarterly — only $5.6k earned; $11.2k is deferred\n"
-            "• $22,200 total sits in Revenue in QB — needs a journal entry to Deferred Revenue\n\n"
-            "### Forecast\n"
-            "• Cash grows to ~$267k by Dec 2026 on base case pipeline\n"
-            "• Hiring plan (2 AEs + 1 Eng + 1 CSM) compresses runway to 13 months — manageable if Series A closes Q1 2027"
-        )
+
 
     elif any(w in q for w in ["unit economics", "ltv", "cac", "payback"]):
         ue = md.UNIT_ECONOMICS

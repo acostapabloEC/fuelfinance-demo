@@ -402,8 +402,11 @@ async def ask(req: AskRequest):
         new_mrr = base_mrr * (1 + pct / 100)
         new_net_burn = base_burn - new_mrr
         monthly_surplus = new_mrr - base_burn
-        if monthly_surplus >= 0:
-            cash_12mo = 240000 + (monthly_surplus * 12)
+        net_burn = base_burn - new_mrr
+        if net_burn <= 0:
+            # Cash flow positive: runway = cash / gross burn (worst case if revenue stopped)
+            worst_case_months = round(240000 / base_burn)
+            cash_12mo = 240000 + (abs(net_burn) * 12)
             answer = (
                 f"## Runway Scenario: +{pct}% Revenue\n\n"
                 f"### Assumptions\n"
@@ -411,14 +414,16 @@ async def ask(req: AskRequest):
                 f"• Cash on hand: $240,000\n\n"
                 f"### With {pct}% revenue increase\n"
                 f"• New MRR: **${new_mrr:,.0f}**/mo\n"
-                f"• Monthly surplus: **+${monthly_surplus:,.0f}**/mo (cash flow positive)\n"
-                f"• Cash in 12 months: **${cash_12mo:,.0f}** (up from $240k today)\n\n"
+                f"• Net burn: **$0** (cash flow positive — revenue exceeds costs)\n"
+                f"• Runway (worst case, if revenue stopped): **{worst_case_months} months**\n"
+                f"• Runway (on current trajectory): **36+ months**\n\n"
                 f"### Bottom line\n"
-                f"A {pct}% revenue increase covers all operating costs with ${monthly_surplus:,.0f}/mo to spare. "
-                f"You would accumulate ${cash_12mo:,.0f} in cash over 12 months — strong position heading into a Series A raise."
+                f"A {pct}% revenue increase makes you cash flow positive by ${abs(net_burn):,.0f}/mo. "
+                f"Even if all revenue disappeared tomorrow, current cash covers {worst_case_months} months of burn. "
+                f"On the current trajectory you accumulate ${cash_12mo:,.0f} in 12 months."
             )
         else:
-            runway_months = 240000 / abs(new_net_burn)
+            runway_months = round(240000 / net_burn)
             answer = (
                 f"## Runway Scenario: +{pct}% Revenue\n\n"
                 f"### Assumptions\n"
@@ -426,11 +431,11 @@ async def ask(req: AskRequest):
                 f"• Cash on hand: $240,000\n\n"
                 f"### With {pct}% revenue increase\n"
                 f"• New MRR: **${new_mrr:,.0f}**/mo\n"
-                f"• Net burn: **${abs(new_net_burn):,.0f}**/mo\n"
-                f"• Runway: **{runway_months:.0f} months**\n\n"
+                f"• Net burn: **${net_burn:,.0f}**/mo\n"
+                f"• Runway: **{runway_months} months**\n\n"
                 f"### Bottom line\n"
                 f"A {pct}% revenue increase reduces monthly burn but you remain cash-flow negative. "
-                f"At this pace, current cash lasts {runway_months:.0f} months — plan Series A timing accordingly."
+                f"At this pace, current cash lasts {runway_months} months — plan your Series A timing accordingly."
             )
 
     elif any(w in q for w in ["runway", "cash", "burn", "months left", "scenario"]):

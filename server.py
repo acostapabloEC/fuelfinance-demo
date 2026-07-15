@@ -396,41 +396,85 @@ async def ask(req: AskRequest):
             "CEO and CTO on below-market draws — compensated via equity (28% and 22%)."
         )
 
-    elif "runway" in q and any(w in q for w in ["decrease", "decreas", "drop", "fall", "declin"]) or ("runway" in q and "opex" in q and any(w in q for w in ["increase", "increas", "up", "rise", "jump"])):
+    elif any(w in q for w in ["what if", "if revenue", "if opex", "if churn", "stress", "scenario", "decrease", "decreas", "drop", "fall"]) and any(w in q for w in ["%", "percent"]):
         import re
-        rev_match = re.search(r'revenue[^0-9]*(\d+)\s*%', q)
-        opex_match = re.search(r'opex[^0-9]*(\d+)\s*%', q)
-        rev_delta = -int(rev_match.group(1)) if rev_match else -10
-        opex_delta = int(opex_match.group(1)) if opex_match else 0
-        base_mrr = 44000
-        base_opex = 43800
-        new_mrr = base_mrr * (1 + rev_delta / 100)
-        new_opex = base_opex * (1 + opex_delta / 100)
-        net_burn = new_opex - new_mrr
-        cash = 240000
+        # Parse revenue and opex deltas from question
+        rev_inc  = re.search(r'revenue[^0-9+-]*\+\s*(\d+)\s*%', q)
+        rev_dec  = re.search(r'revenue[^0-9+-]*-?\s*(\d+)\s*%.*?(decreas|drop|fall|down|less)', q) or \
+                   re.search(r'(decreas|drop|fall|down|cut|reduc)[a-z\s]*revenue[^0-9]*(\d+)\s*%', q) or \
+                   re.search(r'revenue[^0-9]*(decreas|drop|fall|down)[^0-9]*(\d+)\s*%', q)
+        # Simpler approach: find all % figures and their context
+        rev_pct_match  = re.search(r'revenue[^0-9]*(\d+)\s*%', q)
+        opex_pct_match = re.search(r'opex[^0-9]*(\d+)\s*%', q)
+        churn_match    = re.search(r'churn[^0-9]*(\d+)\s*%', q)
+
+        rev_delta  = 0
+        opex_delta = 0
+        churn_delta = 0
+
+        if rev_pct_match:
+            pct = int(rev_pct_match.group(1))
+            rev_delta = -pct if any(w in q for w in ["decreas", "drop", "fall", "down", "less", "cut", "reduc", "worsen"]) else pct
+        if opex_pct_match:
+            pct = int(opex_pct_match.group(1))
+            opex_delta = pct if any(w in q for w in ["increas", "up", "rise", "jump", "more", "higher"]) else -pct
+        if churn_match:
+            churn_delta = int(churn_match.group(1))
+
+        # Base numbers
+        base_mrr       = 44000
+        base_cogs      = 9650    # ~22% of MRR
+        base_opex      = 34150   # salaries + g&a + s&m (excl cogs)
+        base_burn      = base_cogs + base_opex  # 43,800
+        base_gm        = base_mrr - base_cogs
+        base_ebitda    = base_mrr - base_burn
+        cash           = 240000
+
+        # Stressed numbers
+        new_mrr    = base_mrr  * (1 + rev_delta  / 100)
+        new_cogs   = base_cogs * (1 + max(rev_delta, 0) / 100)   # cogs scales with revenue
+        new_opex   = base_opex * (1 + opex_delta / 100)
+        new_burn   = new_cogs + new_opex
+        new_gm     = new_mrr - new_cogs
+        new_ebitda = new_mrr - new_burn
+        net_burn   = new_burn - new_mrr
+
+        gm_pct      = (new_gm / new_mrr * 100) if new_mrr else 0
+        ebitda_pct  = (new_ebitda / new_mrr * 100) if new_mrr else 0
+
         if net_burn <= 0:
             runway_str = "36+ months (cash flow positive)"
         else:
-            runway_months = round(cash / net_burn)
-            runway_str = f"**{runway_months} months**"
+            runway_str = f"**{round(cash / net_burn)} months**"
+
+        label = f"Revenue {rev_delta:+}%" + (f" / OpEx {opex_delta:+}%" if opex_delta else "")
+
         answer = (
-            f"## Stress Test: Revenue {rev_delta:+}% / OpEx +{opex_delta}%\n\n"
-            f"### Scenario inputs\n"
-            f"• Base MRR: $44,000 → stressed: **${new_mrr:,.0f}**/mo ({rev_delta:+}%)\n"
-            f"• Base burn: $43,800 → stressed: **${new_opex:,.0f}**/mo (+{opex_delta}%)\n"
-            f"• Cash on hand: $240,000\n\n"
-            f"### Result\n"
-            f"• Net burn: **${max(net_burn,0):,.0f}**/mo {'(cash flow negative)' if net_burn > 0 else '(cash flow positive)'}\n"
-            f"• Runway: {runway_str}\n\n"
+            f"## Stress Test: {label}\n\n"
+            f"| Metric | Base | Stressed | Delta |\n"
+            f"|--------|-----:|---------:|------:|\n"
+            f"| MRR | $44,000 | **${new_mrr:,.0f}** | {rev_delta:+}% |\n"
+            f"| Gross Profit | ${base_gm:,.0f} | **${new_gm:,.0f}** | {((new_gm-base_gm)/base_gm*100) if base_gm else 0:+.1f}% |\n"
+            f"| Gross Margin | 78.1% | **{gm_pct:.1f}%** | {gm_pct-78.1:+.1f}pp |\n"
+            f"| OpEx | $34,150 | **${new_opex:,.0f}** | {opex_delta:+}% |\n"
+            f"| Total Burn | $43,800 | **${new_burn:,.0f}** | {((new_burn-base_burn)/base_burn*100):+.1f}% |\n"
+            f"| EBITDA | ~$0 | **{'+'if new_ebitda>=0 else ''}${new_ebitda:,.0f}** | — |\n"
+            f"| EBITDA Margin | 0.5% | **{ebitda_pct:.1f}%** | {ebitda_pct-0.5:+.1f}pp |\n"
+            f"| Net Burn | ~$0 | **${max(net_burn,0):,.0f}/mo** | — |\n"
+            f"| Runway | 24 mo | {runway_str} | — |\n\n"
             f"### Bottom line\n"
-            + (
-                f"A {abs(rev_delta)}% revenue decline combined with a {opex_delta}% cost increase creates ${net_burn:,.0f}/mo in net burn. "
-                f"At that rate, $240k in cash lasts {round(cash/net_burn)} months. "
-                f"Immediate levers: freeze hiring, renegotiate vendor contracts, accelerate pipeline close."
-                if net_burn > 0 else
-                f"Even under this stress scenario you remain cash flow positive — revenue still covers all operating costs."
-            )
         )
+        if net_burn > 0:
+            answer += (
+                f"Under this scenario net burn is ${net_burn:,.0f}/mo — current cash of $240k lasts {round(cash/net_burn)} months. "
+                f"Immediate levers: freeze discretionary opex, accelerate pipeline close (TechNova + Cirrus = +$168k ARR), "
+                f"collect $11.4k in overdue AR."
+            )
+        else:
+            answer += (
+                f"Even under this stress scenario the business remains cash flow positive by ${abs(new_ebitda):,.0f}/mo. "
+                f"No immediate action required — monitor gross margin closely if revenue decline continues."
+            )
 
     elif any(w in q for w in ["runway if", "runway when", "runway with"]) or (("runway" in q) and any(w in q for w in ["increase", "jump", "grow", "raise", "double", "10%", "20%", "30%", "50%"])):
         import re

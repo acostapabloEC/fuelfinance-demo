@@ -393,6 +393,32 @@ async def ask(req: AskRequest):
             "CEO and CTO on below-market draws — compensated via equity (28% and 22%)."
         )
 
+    elif any(w in q for w in ["runway if", "runway when", "runway with"]) or (("runway" in q or "runway" in q) and any(w in q for w in ["increase", "jump", "grow", "raise", "double", "10%", "20%", "30%", "50%"])):
+        import re
+        pct_match = re.search(r'(\d+)\s*%', q)
+        pct = int(pct_match.group(1)) if pct_match else 10
+        base_mrr = 44000
+        base_burn = 43800
+        new_mrr = base_mrr * (1 + pct / 100)
+        new_net_burn = base_burn - new_mrr
+        if new_net_burn <= 0:
+            runway_str = f"**infinite** (cash flow positive by ${abs(new_net_burn):,.0f}/mo)"
+        else:
+            runway_months = 240000 / new_net_burn
+            runway_str = f"**{runway_months:.0f} months**"
+        answer = (
+            f"## Runway Scenario: +{pct}% Revenue\n\n"
+            f"### Assumptions\n"
+            f"• Current MRR: $44,000 · Gross burn: $43,800/mo\n"
+            f"• Cash on hand: $240,000\n\n"
+            f"### With {pct}% revenue increase\n"
+            f"• New MRR: **${new_mrr:,.0f}**/mo\n"
+            f"• Net burn: **${max(new_net_burn,0):,.0f}/mo** {'(breakeven — revenue covers all costs)' if new_net_burn <= 0 else ''}\n"
+            f"• Runway: {runway_str}\n\n"
+            f"### Bottom line\n"
+            f"{'A ' + str(pct) + '% revenue lift pushes you into positive cash flow — every dollar above breakeven extends runway indefinitely.' if new_net_burn <= 0 else f'A {pct}% revenue increase reduces net burn and extends runway. At this pace you would need Series A capital within {240000/new_net_burn:.0f} months.'}"
+        )
+
     elif any(w in q for w in ["runway", "cash", "burn", "months left", "scenario"]):
         answer = (
             "## Cash & Runway — June 2026\n\n"

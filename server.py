@@ -396,7 +396,43 @@ async def ask(req: AskRequest):
             "CEO and CTO on below-market draws — compensated via equity (28% and 22%)."
         )
 
-    elif any(w in q for w in ["runway if", "runway when", "runway with"]) or (("runway" in q or "runway" in q) and any(w in q for w in ["increase", "jump", "grow", "raise", "double", "10%", "20%", "30%", "50%"])):
+    elif "runway" in q and any(w in q for w in ["decrease", "decreas", "drop", "fall", "declin"]) or ("runway" in q and "opex" in q and any(w in q for w in ["increase", "increas", "up", "rise", "jump"])):
+        import re
+        rev_match = re.search(r'revenue[^0-9]*(\d+)\s*%', q)
+        opex_match = re.search(r'opex[^0-9]*(\d+)\s*%', q)
+        rev_delta = -int(rev_match.group(1)) if rev_match else -10
+        opex_delta = int(opex_match.group(1)) if opex_match else 0
+        base_mrr = 44000
+        base_opex = 43800
+        new_mrr = base_mrr * (1 + rev_delta / 100)
+        new_opex = base_opex * (1 + opex_delta / 100)
+        net_burn = new_opex - new_mrr
+        cash = 240000
+        if net_burn <= 0:
+            runway_str = "36+ months (cash flow positive)"
+        else:
+            runway_months = round(cash / net_burn)
+            runway_str = f"**{runway_months} months**"
+        answer = (
+            f"## Stress Test: Revenue {rev_delta:+}% / OpEx +{opex_delta}%\n\n"
+            f"### Scenario inputs\n"
+            f"• Base MRR: $44,000 → stressed: **${new_mrr:,.0f}**/mo ({rev_delta:+}%)\n"
+            f"• Base burn: $43,800 → stressed: **${new_opex:,.0f}**/mo (+{opex_delta}%)\n"
+            f"• Cash on hand: $240,000\n\n"
+            f"### Result\n"
+            f"• Net burn: **${max(net_burn,0):,.0f}**/mo {'(cash flow negative)' if net_burn > 0 else '(cash flow positive)'}\n"
+            f"• Runway: {runway_str}\n\n"
+            f"### Bottom line\n"
+            + (
+                f"A {abs(rev_delta)}% revenue decline combined with a {opex_delta}% cost increase creates ${net_burn:,.0f}/mo in net burn. "
+                f"At that rate, $240k in cash lasts {round(cash/net_burn)} months. "
+                f"Immediate levers: freeze hiring, renegotiate vendor contracts, accelerate pipeline close."
+                if net_burn > 0 else
+                f"Even under this stress scenario you remain cash flow positive — revenue still covers all operating costs."
+            )
+        )
+
+    elif any(w in q for w in ["runway if", "runway when", "runway with"]) or (("runway" in q) and any(w in q for w in ["increase", "jump", "grow", "raise", "double", "10%", "20%", "30%", "50%"])):
         import re
         pct_match = re.search(r'(\d+)\s*%', q)
         pct = int(pct_match.group(1)) if pct_match else 10

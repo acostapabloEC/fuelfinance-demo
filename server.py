@@ -297,7 +297,31 @@ async def ask(req: AskRequest):
             "yformat": "$k",
         }
 
-    elif any(w in q for w in ["drives", "driver", "revenue composition", "who pays", "top customer", "biggest customer", "revenue breakdown", "revenue mix"]):
+    elif any(w in q for w in ["drives", "driver", "what drove", "revenue growth", "growth come from", "new business", "expansion", "mrr bridge", "mrr movement"]):
+        answer = (
+            "## Revenue Drivers — June 2026\n\n"
+            "### MRR bridge (May → June)\n\n"
+            "| Motion | Amount | Detail |\n"
+            "|--------|-------:|--------|\n"
+            f"| Beginning MRR (May) | ${md.MRR_PRIOR_MONTH:,.0f} | |\n"
+            f"| New business | +${md.NEW_MRR:,.0f} | Meridian Health, Vanta Partners, Heliosoft |\n"
+            f"| Expansion | +${md.EXPANSION_MRR:,.0f} | Apex upsell + DataCore seat add |\n"
+            f"| Churn | −${abs(md.CHURNED_MRR):,.0f} | Driftly Co — went to competitor on price |\n"
+            f"| **Ending MRR (June)** | **${md.MRR_CURRENT:,.0f}** | **+${md.MRR_CURRENT - md.MRR_PRIOR_MONTH:,.0f} net new** |\n\n"
+            "### Growth mix\n\n"
+            "| Source | $ | % of net new MRR |\n"
+            "|--------|--:|-----------------:|\n"
+            f"| New business | ${md.NEW_MRR:,.0f} | {md.NEW_MRR/(md.MRR_CURRENT-md.MRR_PRIOR_MONTH)*100:.0f}% |\n"
+            f"| Expansion | ${md.EXPANSION_MRR:,.0f} | {md.EXPANSION_MRR/(md.MRR_CURRENT-md.MRR_PRIOR_MONTH)*100:.0f}% |\n"
+            f"| Churn offset | −${abs(md.CHURNED_MRR):,.0f} | −{abs(md.CHURNED_MRR)/(md.MRR_CURRENT-md.MRR_PRIOR_MONTH)*100:.0f}% |\n\n"
+            "### Takeaways\n"
+            "• **New business** is the primary driver — 3 logos added in a single month\n"
+            "• **Expansion** is healthy at 41% of net new — NRR 108.2% means existing customers are growing\n"
+            "• **Churn** is contained at $1k (2.6% of prior MRR) but Driftly's reason (price) is a signal to watch\n"
+            "• At this MoM growth rate, MRR doubles by **Sep 2026**"
+        )
+
+    elif any(w in q for w in ["top customer", "biggest customer", "customer concentration", "revenue breakdown", "revenue mix", "who pays", "revenue composition"]):
         roster = sorted(md.CUSTOMER_ROSTER, key=lambda c: c["mrr"], reverse=True)
         total  = sum(c["mrr"] for c in roster)
         top3   = sum(c["mrr"] for c in roster[:3])

@@ -187,6 +187,14 @@
             <div class="chip-label">Which customers are at churn risk?</div>
             <div class="chip-meta">Cohort retention &amp; signals</div>
           </button>
+          <button class="prompt-chip" onclick="sendPrompt(this.dataset.q)" data-q="What is my cogs composition?">
+            <div class="chip-label">COGS composition</div>
+            <div class="chip-meta">Infrastructure, support &amp; gross margin</div>
+          </button>
+          <button class="prompt-chip" onclick="sendPrompt(this.dataset.q)" data-q="What is my opex composition?">
+            <div class="chip-label">OpEx composition</div>
+            <div class="chip-meta">R&amp;D, S&amp;M &amp; G&amp;A breakdown</div>
+          </button>
           <button class="prompt-chip" onclick="sendPrompt(this.dataset.q)" data-q="Show me the sales pipeline and forecast">
             <div class="chip-label">Pipeline &amp; Dec 2026 forecast</div>
             <div class="chip-meta">Weighted ARR &amp; coverage ratio</div>

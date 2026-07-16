@@ -464,6 +464,12 @@ async def ask(req: AskRequest):
         gm_pct      = (new_gm / new_mrr * 100) if new_mrr else 0
         ebitda_pct  = (new_ebitda / new_mrr * 100) if new_mrr else 0
 
+        base_net_burn = base_burn - base_mrr
+        if base_net_burn <= 0:
+            base_runway_str = "36+ mo (cash flow positive)"
+        else:
+            base_runway_str = f"{round(cash / base_net_burn)} months"
+
         if net_burn <= 0:
             runway_str = "36+ months (cash flow positive)"
         else:
@@ -480,10 +486,10 @@ async def ask(req: AskRequest):
             f"| Gross Margin | 78.1% | **{gm_pct:.1f}%** | {gm_pct-78.1:+.1f}pp |\n"
             f"| OpEx | $34,150 | **${new_opex:,.0f}** | {opex_delta:+}% |\n"
             f"| Total Burn | $43,800 | **${new_burn:,.0f}** | {((new_burn-base_burn)/base_burn*100):+.1f}% |\n"
-            f"| EBITDA | ~$0 | **{'+'if new_ebitda>=0 else ''}${new_ebitda:,.0f}** | — |\n"
+            f"| EBITDA | +$200 | **{'+'if new_ebitda>=0 else ''}${new_ebitda:,.0f}** | — |\n"
             f"| EBITDA Margin | 0.5% | **{ebitda_pct:.1f}%** | {ebitda_pct-0.5:+.1f}pp |\n"
             f"| Net Burn | ~$0 | **${max(net_burn,0):,.0f}/mo** | — |\n"
-            f"| Runway | 24 mo | {runway_str} | — |\n\n"
+            f"| Runway | {base_runway_str} | {runway_str} | — |\n\n"
             f"### Bottom line\n"
         )
         if net_burn > 0:

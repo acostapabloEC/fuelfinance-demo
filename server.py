@@ -232,7 +232,7 @@ async def ask(req: AskRequest):
             "yformat": "$k",
         }
 
-    elif any(w in q for w in ["forecast", "proforma", "pro forma", "dec", "year end", "h2", "second half"]):
+    elif any(w in q for w in ["forecast", "proforma", "pro forma", "year end", "h2", "second half", "dec 2026", "by december"]):
         fc = md.FORECAST
         fs = md.FORECAST_SUMMARY
         months = [f['month'] for f in fc]
@@ -418,7 +418,7 @@ async def ask(req: AskRequest):
             "• 1 × Sr Engineer + 1 × CSM — Oct 2026"
         )
 
-    elif any(w in q for w in ["what if", "if revenue", "if opex", "if churn", "stress", "scenario", "decrease", "decreas", "drop", "fall"]) and any(w in q for w in ["%", "percent"]):
+    elif any(w in q for w in ["what if", "if revenue", "if opex", "if churn", "stress", "decrease", "decreas", "drop", "fall", "revenue down", "revenue drops"]) and any(w in q for w in ["%", "percent"]):
         import re
         # Parse revenue and opex deltas from question
         rev_inc  = re.search(r'revenue[^0-9+-]*\+\s*(\d+)\s*%', q)

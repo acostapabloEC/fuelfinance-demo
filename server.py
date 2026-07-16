@@ -684,6 +684,39 @@ async def ask(req: AskRequest):
             "• Fix: one journal entry to move $22,200 from Revenue → Deferred Revenue"
         )
 
+    elif any(w in q for w in ["balance sheet", "balance"]):
+        bs = md
+        answer = (
+            "## Balance Sheet — June 30, 2026\n\n"
+            "### Assets\n\n"
+            "| Asset | Amount | Note |\n"
+            "|-------|-------:|------|\n"
+            f"| Cash & Equivalents | **${md.BS_CASH:,.0f}** | Bank of America checking |\n"
+            f"| Accounts Receivable | **${md.BS_AR:,.0f}** | Open invoices per aging |\n"
+            f"| Prepaid Expenses | **${md.BS_PREPAID:,.0f}** | AWS + insurance prepaid |\n"
+            f"| Security Deposit | **${md.BS_SECURITY_DEPOSIT:,.0f}** | WeWork |\n"
+            f"| **Total Assets** | **${md.BS_TOTAL_ASSETS:,.0f}** | |\n\n"
+            "### Liabilities\n\n"
+            "| Liability | Amount | Note |\n"
+            "|-----------|-------:|------|\n"
+            f"| Accounts Payable | **${md.BS_AP:,.0f}** | ⚠️ Understated — ~$11k unrecorded |\n"
+            f"| Deferred Revenue | **${md.BS_DEFERRED_REVENUE_BOOKED:,.0f}** | ⚠️ Should be $22,200 — not journaled |\n"
+            f"| Accrued Liabilities | **${md.BS_ACCRUED_LIABILITIES:,.0f}** | ⚠️ Payroll taxes not recorded |\n"
+            f"| Convertible Note A | **${md.BS_NOTE_A:,.0f}** | 9% interest, matures Jun 2027 |\n"
+            f"| Convertible Note B | **${md.BS_NOTE_B:,.0f}** | 8% interest |\n"
+            f"| **Total Liabilities** | **${md.BS_TOTAL_LIABILITIES_BOOKED:,.0f}** | |\n\n"
+            "### Equity\n\n"
+            "| Item | Amount |\n"
+            "|------|-------:|\n"
+            f"| Accumulated Deficit | **${md.BS_ACCUMULATED_DEFICIT:,.0f}** |\n"
+            f"| **Total Equity** | **${md.BS_TOTAL_EQUITY:,.0f}** |\n\n"
+            "### Known issues\n"
+            "• Deferred Revenue understated by **$22,200** — Orbits + DataCore prepayments not journaled\n"
+            "• AP understated by ~**$11,000** — open vendor bills not recorded\n"
+            "• Accrued payroll taxes **$0** — should reflect June liability\n"
+            "• Interest expense on convertible notes **not accrued** (~$3,750/mo)"
+        )
+
     elif any(w in q for w in ["fix", "action", "journal", "entries", "priorit", "close"]):
         all_issues = sorted(fails + warns, key=lambda r: 0 if r["status"] == "fail" else 1)
         lines = []

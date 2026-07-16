@@ -685,12 +685,6 @@ async def ask(req: AskRequest):
         )
 
     elif any(w in q for w in ["balance sheet", "balance"]):
-        bs = md
-        answer = (
-            "## Balance Sheet — June 30, 2026\n\n"
-            "### Assets\n\n"
-            "| Asset | Amount | Note |\n"
-            "|-------|-------:|------|\n"
         total_assets = md.BS_CASH + md.BS_AR + md.BS_PREPAID + md.BS_SECURITY_DEPOSIT
         total_liab_corrected = md.BS_NOTE_A + md.BS_NOTE_B + 22200 + 11000 + 4000
         equity_corrected = total_assets - total_liab_corrected

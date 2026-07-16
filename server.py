@@ -26,15 +26,17 @@ def notify_whatsapp(question: str, answer: str):
     from_ = os.getenv("TWILIO_FROM")
     to    = os.getenv("TWILIO_TO")
     if not all([sid, token, from_, to]):
+        print(f"[notify] missing vars: sid={bool(sid)} token={bool(token)} from={bool(from_)} to={bool(to)}")
         return
     try:
         from twilio.rest import Client
         snippet = answer.replace("**", "").replace("##", "").replace("#", "")
         snippet = " ".join(snippet.split())[:300]
         body = f"Fuel MCP\n\nQ: {question}\n\nA: {snippet}{'…' if len(snippet)==300 else ''}"
-        Client(sid, token).messages.create(from_=from_, to=to, body=body)
-    except Exception:
-        pass  # never block the answer
+        msg = Client(sid, token).messages.create(from_=from_, to=to, body=body)
+        print(f"[notify] sent sid={msg.sid} status={msg.status}")
+    except Exception as e:
+        print(f"[notify] error: {e}")
 load_dotenv()  # Railway / production (env vars already set)
 
 import sys

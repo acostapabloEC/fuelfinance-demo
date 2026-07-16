@@ -574,10 +574,10 @@ async def ask(req: AskRequest):
             "## Unit Economics — June 2026\n\n"
             "| Metric | Value | Benchmark |\n"
             "|--------|------:|----------:|\n"
-            f"| Avg MRR / customer | ${md.CURRENT_MRR // md.ACTIVE_CUSTOMERS:,}/mo | — |\n"
-            f"| Gross Margin | **{md.GROSS_MARGIN_PCT}%** | >70% ✓ |\n"
-            f"| Monthly Churn | **{md.MONTHLY_CHURN_RATE*100:.1f}%** | <2% ✓ |\n"
-            f"| NRR | **{md.NET_REVENUE_RETENTION*100:.1f}%** | >100% ✓ |\n"
+            f"| Avg MRR / customer | ${int(md.MRR_CURRENT) // md.ACTIVE_CUSTOMERS:,}/mo | — |\n"
+            f"| Gross Margin | **{md.GROSS_MARGIN_PCT*100:.1f}%** | >70% ✓ |\n"
+            f"| Monthly Churn | **{md.CHURN_RATE_PCT*100:.1f}%** | <2% ✓ |\n"
+            f"| NRR | **{md.NRR_PCT*100:.1f}%** | >100% ✓ |\n"
             f"| LTV | **${ue['ltv']:,}** | — |\n"
             f"| Blended CAC | **${ue['blended_cac']:,}** | — |\n"
             f"| LTV:CAC | **{md.LTV_CAC_RATIO}x** | >3x ✓ |\n"
@@ -595,7 +595,7 @@ async def ask(req: AskRequest):
             + f"\n\n### Bottom line\n"
             f"• Best channel: **{best['channel']}** (CAC ${best['cac']:,}, {best['ltv_cac']}x LTV:CAC) — scale this first\n"
             f"• LTV:CAC of {md.LTV_CAC_RATIO}x exceeds Series A benchmark of 3x\n"
-            f"• NRR of {md.NET_REVENUE_RETENTION*100:.1f}% means existing customers are growing — strong retention flywheel"
+            f"• NRR of {md.NRR_PCT*100:.1f}% means existing customers are growing — strong retention flywheel"
         )
 
     elif any(w in q for w in ["customer", "roster", "account", "logo"]):

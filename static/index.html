@@ -59,7 +59,7 @@
   .welcome-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #2a2060, #1a1535); border: 1px solid var(--border2); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 22px; }
   .welcome-title { font-size: 22px; font-weight: 600; letter-spacing: -.03em; margin-bottom: 8px; }
   .welcome-sub { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 360px; }
-  .prompts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 28px; width: 100%; max-width: 560px; }
+  .prompts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 28px; width: 100%; max-width: 840px; }
   .prompt-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 13px 14px; cursor: pointer; text-align: left; transition: all .2s; font-family: var(--font); }
   .prompt-chip:hover { border-color: var(--accent); background: #14142a; transform: translateY(-1px); }
   .chip-label { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.4; }
@@ -167,6 +167,10 @@
             <div class="chip-label">Hiring scenario: 2 AEs + 1 engineer</div>
             <div class="chip-meta">Runway &amp; EBITDA impact by year-end</div>
           </button>
+          <button class="prompt-chip" onclick="sendPrompt(this.dataset.q)" data-q="What is my cash runway?">
+            <div class="chip-label">Cash runway</div>
+            <div class="chip-meta">Months of runway at current burn</div>
+          </button>
           <button class="prompt-chip" onclick="sendPrompt(this.dataset.q)" data-q="Show MRR trend for the last 6 months">
             <div class="chip-label">MRR trend — last 6 months</div>
             <div class="chip-meta">With ARR, gross margin &amp; EBITDA</div>
@@ -175,6 +179,10 @@
             <div class="chip-label">What's holding up a clean close?</div>
             <div class="chip-meta">Prioritized action list</div>
           </button>
+          <button class="prompt-chip" onclick="sendPrompt(this.dataset.q)" data-q="What if revenue decreases by 20%?">
+            <div class="chip-label">Revenue down 20% — impact?</div>
+            <div class="chip-meta">Burn, runway &amp; EBITDA stress test</div>
+          </button>
           <button class="prompt-chip" onclick="sendPrompt(this.dataset.q)" data-q="Which customers are at churn risk?">
             <div class="chip-label">Which customers are at churn risk?</div>
             <div class="chip-meta">Cohort retention &amp; signals</div>
@@ -182,6 +190,10 @@
           <button class="prompt-chip" onclick="sendPrompt(this.dataset.q)" data-q="Show me the sales pipeline and forecast">
             <div class="chip-label">Pipeline &amp; Dec 2026 forecast</div>
             <div class="chip-meta">Weighted ARR &amp; coverage ratio</div>
+          </button>
+          <button class="prompt-chip" onclick="sendPrompt(this.dataset.q)" data-q="What are my unit economics?">
+            <div class="chip-label">Unit economics &amp; benchmarks</div>
+            <div class="chip-meta">CAC, LTV, payback &amp; NRR</div>
           </button>
         </div>
       </div>

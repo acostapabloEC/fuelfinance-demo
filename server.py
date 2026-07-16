@@ -203,16 +203,19 @@ async def ask(req: AskRequest):
 
     elif any(w in q for w in ["mrr trend", "trend", "6 month", "six month", "history", "historical", "last 6"]):
         hist = md.MONTHLY_HISTORY
-        rows = "\n".join(
-            f"| {h['month']} | ${h['mrr']/1000:.0f}k | ${h['arr']/1000:.0f}k | {h['customers']} | {h['gross_margin_pct']}% | {'+' if h['ebitda'] >= 0 else ''}${h['ebitda']:,} |"
-            for h in hist
-        )
+        months_h = [h['month'].replace(" 2026","") for h in hist]
+        col_h = "| | " + " | ".join(months_h) + " |\n"
+        col_s = "|---|" + "|".join(["---:" for _ in hist]) + "|\n"
+        def hrow(label, vals): return f"| {label} | " + " | ".join(vals) + " |\n"
         answer = (
             "## MRR Trend — Jan to Jun 2026\n\n"
-            "| Month | MRR | ARR | Customers | Gross Margin | EBITDA |\n"
-            "|-------|----:|----:|----------:|-------------:|-------:|\n"
-            + rows + "\n\n"
-            "### Key takeaways\n"
+            + col_h + col_s
+            + hrow("MRR",          [f"${h['mrr']/1000:.0f}k"  for h in hist])
+            + hrow("ARR",          [f"${h['arr']/1000:.0f}k"  for h in hist])
+            + hrow("Customers",    [str(h['customers'])        for h in hist])
+            + hrow("Gross Margin", [f"{h['gross_margin_pct']}%" for h in hist])
+            + hrow("EBITDA",       [f"{'+' if h['ebitda']>=0 else ''}${h['ebitda']:,}" for h in hist])
+            + "\n### Key takeaways\n"
             "• MRR grew **144%** in H1 — from $18k to $44k in 6 months\n"
             "• MoM growth avg ~18% early, stabilizing to 15.8% as base grows\n"
             "• Gross margin expanded **62.2% → 77.8%** as revenue scales into fixed infra costs\n"
@@ -232,16 +235,20 @@ async def ask(req: AskRequest):
     elif any(w in q for w in ["forecast", "proforma", "pro forma", "dec", "year end", "h2", "second half"]):
         fc = md.FORECAST
         fs = md.FORECAST_SUMMARY
-        header = "## Forecast — Jul to Dec 2026\n\n"
-        header += "| Month | MRR | ARR | Gross Burn | EBITDA | Margin | Cash |\n"
-        header += "|-------|----:|----:|-----------:|-------:|-------:|-----:|\n"
-        rows = "\n".join(
-            f"| {f['month']} | ${f['mrr']/1000:.0f}k | ${f['arr']/1000:.0f}k | $43.8k | {'+' if f['ebitda'] >= 0 else ''}${f['ebitda']/1000:.1f}k | {f['ebitda_margin_pct']}% | ${f['cash']/1000:.0f}k |"
-            for f in fc
-        )
+        months = [f['month'] for f in fc]
+        col_header = "| | " + " | ".join(m.replace(" 2026","") for m in months) + " |\n"
+        col_sep    = "|---|" + "|".join(["---:" for _ in months]) + "|\n"
+        def frow(label, vals): return f"| {label} | " + " | ".join(vals) + " |\n"
         answer = (
-            header + rows + "\n\n"
-            f"### Key milestones\n"
+            "## Forecast — Jul to Dec 2026\n\n"
+            + col_header + col_sep
+            + frow("MRR",          [f"${f['mrr']/1000:.0f}k"  for f in fc])
+            + frow("ARR",          [f"${f['arr']/1000:.0f}k"  for f in fc])
+            + frow("Gross Burn",   ["$43.8k" for _ in fc])
+            + frow("EBITDA",       [f"{'+' if f['ebitda']>=0 else ''}${f['ebitda']/1000:.1f}k" for f in fc])
+            + frow("EBITDA Margin",[f"{f['ebitda_margin_pct']}%" for f in fc])
+            + frow("Cash",         [f"${f['cash']/1000:.0f}k"  for f in fc])
+            + f"\n### Key milestones\n"
             f"• ARR Jun 2026: **${fs['arr_jun_2026']:,.0f}**\n"
             f"• ARR Dec 2026: **${fs['arr_dec_2026']:,.0f}** ({fs['arr_growth_h2_pct']}% H2 growth)\n"
             f"• $1M ARR: **{fs['key_milestone']}**\n"

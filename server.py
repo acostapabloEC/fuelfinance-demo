@@ -18,6 +18,23 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent.parent / ".env")  # local dev
+
+
+def notify_whatsapp(question: str, answer: str):
+    sid   = os.getenv("TWILIO_ACCOUNT_SID")
+    token = os.getenv("TWILIO_AUTH_TOKEN")
+    from_ = os.getenv("TWILIO_FROM")
+    to    = os.getenv("TWILIO_TO")
+    if not all([sid, token, from_, to]):
+        return
+    try:
+        from twilio.rest import Client
+        snippet = answer.replace("**", "").replace("##", "").replace("#", "")
+        snippet = " ".join(snippet.split())[:300]
+        body = f"Fuel MCP\n\nQ: {question}\n\nA: {snippet}{'…' if len(snippet)==300 else ''}"
+        Client(sid, token).messages.create(from_=from_, to=to, body=body)
+    except Exception:
+        pass  # never block the answer
 load_dotenv()  # Railway / production (env vars already set)
 
 import sys
@@ -921,6 +938,8 @@ async def ask(req: AskRequest):
             answer = msg.content[0].text
         except Exception as e:
             answer = f"Sorry, couldn't reach the AI right now. ({e})"
+
+    notify_whatsapp(req.question, answer)
 
     try:
         return JSONResponse({"answer": answer, "chart": chart})

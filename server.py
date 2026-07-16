@@ -661,20 +661,27 @@ async def ask(req: AskRequest):
         )
 
     elif any(w in q for w in ["ebitda", "profit", "p&l", "income", "margin"]):
+        hist = md.MONTHLY_HISTORY
+        months_p = [h['month'].replace(" 2026","") for h in hist]
+        col_h = "| | " + " | ".join(months_p) + " |\n"
+        col_s = "|---|" + "|".join(["---:" for _ in hist]) + "|\n"
+        def prow(label, vals): return f"| {label} | " + " | ".join(vals) + " |\n"
         answer = (
-            "## P&L — June 2026 (accrual basis)\n\n"
-            "### Income Statement\n"
-            "• Revenue (MRR recognized): $44,000\n"
-            "• COGS: ($9,800) → Gross Profit: **$34,200 (77.8% margin)**\n"
-            "• Payroll: ($30,000)\n"
-            "• Other OpEx: ($4,000)\n"
-            "• **EBITDA: +$200** (nearly breakeven, trending positive)\n\n"
-            "### Cash basis (what QB currently shows — overstated)\n"
-            "• Revenue (cash collected): $64,200\n"
-            "• Includes $22,200 in unearned prepayments from Orbits + DataCore\n"
-            "• QB EBITDA: +$22,200 — not real, don't share this externally\n\n"
-            "### Why the $22,200 gap exists\n"
-            "Neither Orbits ($11k) nor DataCore ($11.2k) were moved to Deferred Revenue in QB. One journal entry fixes this."
+            "## Income Statement — Jan to Jun 2026 (Accrual Basis)\n\n"
+            + col_h + col_s
+            + prow("Revenue",      [f"${h['mrr']:,}"  for h in hist])
+            + prow("COGS",         [f"(${round(h['mrr']*(1-h['gross_margin_pct']/100)):,})" for h in hist])
+            + prow("**Gross Profit**", [f"**${round(h['mrr']*h['gross_margin_pct']/100):,}**" for h in hist])
+            + prow("Gross Margin", [f"{h['gross_margin_pct']}%" for h in hist])
+            + prow("Payroll",      ["($28,000)" if h['mrr'] < 30000 else "($30,000)" for h in hist])
+            + prow("Other OpEx",   ["($4,000)" for _ in hist])
+            + prow("**EBITDA**",   [f"**{'+' if h['ebitda']>=0 else ''}${h['ebitda']:,}**" for h in hist])
+            + prow("EBITDA Margin",[f"{h['ebitda_margin_pct']}%" for h in hist])
+            + "\n### Note — Cash vs Accrual gap (June)\n"
+            "• QB shows revenue of **$64,200** (cash collected) vs **$44,000** accrual\n"
+            "• Gap of **$22,200** = unearned prepayments from Orbits ($11k) + DataCore ($11.2k)\n"
+            "• QB EBITDA of +$22,200 is **overstated** — do not share externally\n"
+            "• Fix: one journal entry to move $22,200 from Revenue → Deferred Revenue"
         )
 
     elif any(w in q for w in ["fix", "action", "journal", "entries", "priorit", "close"]):

@@ -93,6 +93,16 @@ async def serve_ui():
 
 # ── Metrics ───────────────────────────────────────────────────────────────────
 
+@app.get("/debug-env")
+async def debug_env():
+    return JSONResponse({
+        "TWILIO_ACCOUNT_SID": bool(os.getenv("TWILIO_ACCOUNT_SID")),
+        "TWILIO_AUTH_TOKEN":  bool(os.getenv("TWILIO_AUTH_TOKEN")),
+        "TWILIO_FROM":        os.getenv("TWILIO_FROM"),
+        "TWILIO_TO":          os.getenv("TWILIO_TO"),
+    })
+
+
 @app.get("/metrics")
 async def get_metrics():
     import mock_data as md

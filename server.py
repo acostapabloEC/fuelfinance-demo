@@ -297,7 +297,7 @@ async def ask(req: AskRequest):
             "yformat": "$k",
         }
 
-    elif any(w in q for w in ["drives", "driver", "what drove", "revenue growth", "growth come from", "new business", "mrr bridge", "mrr movement"]) and "opex" not in q and "cogs" not in q:
+    elif any(w in q for w in ["drives", "driver", "what drove", "revenue growth", "revenue composition", "growth come from", "new business", "mrr bridge", "mrr movement"]) and "opex" not in q and "cogs" not in q:
         answer = (
             "## Revenue Drivers — June 2026\n\n"
             "### MRR bridge (May → June)\n\n"
@@ -321,7 +321,7 @@ async def ask(req: AskRequest):
             "• At this MoM growth rate, MRR doubles by **Sep 2026**"
         )
 
-    elif any(w in q for w in ["top customer", "biggest customer", "customer concentration", "revenue breakdown", "revenue mix", "who pays", "revenue composition"]):
+    elif any(w in q for w in ["top customer", "biggest customer", "customer concentration", "revenue breakdown", "revenue mix", "who pays"]):
         roster = sorted(md.CUSTOMER_ROSTER, key=lambda c: c["mrr"], reverse=True)
         total  = sum(c["mrr"] for c in roster)
         top3   = sum(c["mrr"] for c in roster[:3])

@@ -155,9 +155,11 @@
   <div id="chat-col">
     <div id="thread">
       <div id="welcome">
-        <div class="welcome-icon">⚡</div>
-        <div class="welcome-title">Ask your finances anything</div>
-        <div class="welcome-sub">Live data from Stripe, QuickBooks, Gusto, HubSpot, and Carta. No hallucinations.</div>
+        <div id="welcome-hero">
+          <div class="welcome-icon">⚡</div>
+          <div class="welcome-title">Ask your finances anything</div>
+          <div class="welcome-sub">Live data from Stripe, QuickBooks, Gusto, HubSpot, and Carta. No hallucinations.</div>
+        </div>
         <div class="prompts-grid">
           <button class="prompt-chip" onclick="sendPrompt(this.dataset.q)" data-q="Am I ready to raise?">
             <div class="chip-label">Am I ready to raise?</div>
@@ -202,6 +204,10 @@
           <button class="prompt-chip" onclick="sendPrompt(this.dataset.q)" data-q="What are my unit economics?">
             <div class="chip-label">Unit economics &amp; benchmarks</div>
             <div class="chip-meta">CAC, LTV, payback &amp; NRR</div>
+          </button>
+          <button class="prompt-chip" onclick="sendPrompt(this.dataset.q)" data-q="Show me the YoY income statement variance">
+            <div class="chip-label">YoY variance</div>
+            <div class="chip-meta">Jun 2025 vs Jun 2026 — P&amp;L delta</div>
           </button>
         </div>
       </div>
@@ -455,7 +461,7 @@
 
   // ── Message rendering ────────────────────────────────────────────────────────
   function appendMsg(role, text, sources, chart) {
-    if (msgCount === 0) welcome.style.display = 'none';
+    if (msgCount === 0) document.getElementById('welcome-hero').style.display = 'none';
     msgCount++;
 
     const wrap = document.createElement('div');

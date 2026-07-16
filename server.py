@@ -920,36 +920,22 @@ async def ask(req: AskRequest):
         )
 
     else:
-        # Fall back to Claude
-        context = (
-            f"You are Fuel AI, an intelligent financial assistant for Acme SaaS Inc.\n"
-            f"Today is June 30, 2026. You have access to live financial data from Stripe, QuickBooks, Gusto, HubSpot, and Carta.\n\n"
-            f"KEY FINANCIALS:\n"
-            f"- MRR: $42,000 (+10.5% MoM) | ARR: $504,000 | 14 customers\n"
-            f"- Gross margin: 73.8% | EBITDA: breakeven (accrual)\n"
-            f"- Cash: $185,000 | Runway: 18.9 months\n"
-            f"- LTV:CAC: 4.6x | Monthly churn: 2.4% | NRR: 94.1%\n"
-            f"- Deferred revenue error: $22,200 booked as income (Orbits $11k + DataCore $11.2k)\n"
-            f"- Open issues: {counts['fail']} critical, {counts['warn']} warnings\n\n"
-            f"OPEN ISSUES:\n"
-            + "\n".join(f"[{r['status'].upper()}] {r['name']}: {r['detail']}" for r in fails + warns)
-            + f"\n\nFORECAST:\n- ARR Dec 2026: $960,000 | Cash Dec 2026: $267,100\n"
-            f"- Series A target: $1M ARR (Jan 2027)\n\n"
-            f"Answer the question below directly and specifically. Use the data above. "
-            f"Be concise but complete. Use bullet points where helpful. No fluff.\n\n"
-            f"Question: {req.question}"
+        answer = (
+            "I can answer questions about:\n\n"
+            "• **MRR & ARR** — trend, bridge, composition\n"
+            "• **Cash runway** — burn, months left, stress tests\n"
+            "• **Income statement** — P&L, EBITDA, gross margin\n"
+            "• **Balance sheet** — assets, liabilities, equity\n"
+            "• **COGS & OpEx** — breakdown by category\n"
+            "• **Unit economics** — CAC, LTV, NRR, payback\n"
+            "• **Customers** — churn risk, cohort retention, concentration\n"
+            "• **Pipeline & forecast** — weighted ARR, Dec 2026 projection\n"
+            "• **Hiring scenarios** — runway & EBITDA impact\n"
+            "• **Stress tests** — revenue/opex/churn scenarios\n"
+            "• **Series A readiness** — book cleanup checklist\n"
+            "• **YoY variance** — Jun 2025 vs Jun 2026\n\n"
+            "Try one of the suggested questions above, or rephrase your question."
         )
-        try:
-            import anthropic
-            client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
-            msg = client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=600,
-                messages=[{"role": "user", "content": context}],
-            )
-            answer = msg.content[0].text
-        except Exception as e:
-            answer = f"Sorry, couldn't reach the AI right now. ({e})"
 
     notify_whatsapp(req.question, answer)
 

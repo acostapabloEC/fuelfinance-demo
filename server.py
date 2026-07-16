@@ -297,6 +297,30 @@ async def ask(req: AskRequest):
             "yformat": "$k",
         }
 
+    elif any(w in q for w in ["drives", "driver", "revenue composition", "who pays", "top customer", "biggest customer", "revenue breakdown", "revenue mix"]):
+        roster = sorted(md.CUSTOMER_ROSTER, key=lambda c: c["mrr"], reverse=True)
+        total  = sum(c["mrr"] for c in roster)
+        top3   = sum(c["mrr"] for c in roster[:3])
+        header = (
+            "## Revenue Composition — June 2026\n\n"
+            f"**Total MRR: ${total:,.0f}** across {len(roster)} customers\n\n"
+            "| # | Customer | MRR | % of Total | Plan | Since |\n"
+            "|---|----------|----:|-----------:|------|-------|\n"
+        )
+        rows = ""
+        for i, c in enumerate(roster, 1):
+            pct = c["mrr"] / total * 100
+            rows += f"| {i} | {c['name']} | ${c['mrr']:,.0f} | {pct:.1f}% | {c['plan']} | {c['since'][:7]} |\n"
+        answer = (
+            header + rows + "\n"
+            "### Key takeaways\n"
+            f"• Top 3 customers (**Apex, Novu, DataCore**) = **${top3:,.0f}/mo ({top3/total*100:.0f}% of MRR)** — concentration risk\n"
+            f"• Enterprise plan drives **{sum(c['mrr'] for c in roster if c['plan']=='Enterprise')/total*100:.0f}%** of MRR from {sum(1 for c in roster if c['plan']=='Enterprise')} logos\n"
+            f"• Growth plan: **{sum(c['mrr'] for c in roster if c['plan']=='Growth')/total*100:.0f}%** from {sum(1 for c in roster if c['plan']=='Growth')} logos\n"
+            f"• Starter plan: **{sum(c['mrr'] for c in roster if c['plan']=='Starter')/total*100:.0f}%** from {sum(1 for c in roster if c['plan']=='Starter')} logos — expansion opportunity\n"
+            f"• Newest logos (Meridian, Vanta, Fintex) = only **${sum(c['mrr'] for c in roster if c['since'] >= '2026-06-01'):,.0f}/mo** — very early"
+        )
+
     elif any(w in q for w in ["churn risk", "at risk", "churn", "retention", "cohort", "nrr"]):
         cohorts = md.COHORT_RETENTION
         def risk_flag(c):

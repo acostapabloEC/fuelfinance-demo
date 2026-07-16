@@ -290,21 +290,29 @@ async def ask(req: AskRequest):
 
     elif any(w in q for w in ["churn risk", "at risk", "churn", "retention", "cohort", "nrr"]):
         cohorts = md.COHORT_RETENTION
+        def risk_flag(c):
+            nrr = float(str(c['nrr']).replace('%',''))
+            if nrr < 90: return "🔴 At risk"
+            if nrr < 105: return "🟡 Watch"
+            return "🟢 Healthy"
+        header = (
+            "## Cohort Retention & Churn Risk\n\n"
+            "| Cohort | Starting MRR | Current MRR | NRR | Status | Note |\n"
+            "|--------|------------:|------------:|----:|--------|------|\n"
+        )
         rows = "\n".join(
-            f"  {c['cohort']:12s}  Start ${c['initial_mrr']:>6,.0f}  Current ${c['current_mrr']:>6,.0f}  NRR {c['nrr']}%"
-            + (f"  ← {c['note']}" if c.get('note') else "")
+            f"| {c['cohort']} | ${c['initial_mrr']:,} | ${c['current_mrr']:,} | **{c['nrr']}%** | {risk_flag(c)} | {c.get('note', '—')} |"
             for c in cohorts
         )
         answer = (
-            "Cohort retention & churn risk:\n\n"
-            f"{rows}\n\n"
-            "At-risk signals:\n"
-            "  • Q3 2025 cohort NRR 82% — Driftly churned (price sensitivity). Watch Fintex ($800/mo, same profile).\n"
-            "  • Dana Kim manages all 10 accounts solo. Above $60k MRR this becomes a churn risk.\n"
-            "  • Orbits ($1k/mo) renewal negotiation in Aug 2026 — low MRR but annual prepay relationship.\n\n"
-            "Positive signals:\n"
-            "  • Jan 2025 cohort at 150% NRR — expansion from Apex + Orbits seat adds.\n"
-            "  • Q4 2025 at 120% NRR — healthy upsell motion emerging."
+            header + rows + "\n\n"
+            "### At-risk signals\n"
+            "• Q3 2025 cohort NRR 82% — Driftly churned (price sensitivity). Watch **Fintex** ($800/mo, same profile)\n"
+            "• Dana Kim manages all 10 accounts solo — above $60k MRR this becomes a single point of failure\n"
+            "• Orbits renewal negotiation due **Aug 2026** — annual prepay relationship at risk\n\n"
+            "### Positive signals\n"
+            "• Jan 2025 cohort at **150% NRR** — expansion from Apex + Orbits seat adds\n"
+            "• Q4 2025 at **120% NRR** — healthy upsell motion emerging across newer cohorts"
         )
 
     elif any(w in q for w in ["gross margin", "cogs", "cost of goods", "cost of revenue"]):

@@ -204,17 +204,19 @@ async def ask(req: AskRequest):
     elif any(w in q for w in ["mrr trend", "trend", "6 month", "six month", "history", "historical", "last 6"]):
         hist = md.MONTHLY_HISTORY
         rows = "\n".join(
-            f"  {h['month']:10s}  MRR ${h['mrr']:>7,.0f}  ARR ${h['arr']:>9,.0f}  Customers {h['customers']:>2}  "
-            f"Gross Margin {h['gross_margin_pct']}%  EBITDA {'+' if h['ebitda'] >= 0 else ''}${h['ebitda']:,.0f}"
+            f"| {h['month']} | ${h['mrr']/1000:.0f}k | ${h['arr']/1000:.0f}k | {h['customers']} | {h['gross_margin_pct']}% | {'+' if h['ebitda'] >= 0 else ''}${h['ebitda']:,} |"
             for h in hist
         )
         answer = (
-            "MRR trend — Jan to Jun 2026:\n\n"
-            f"{rows}\n\n"
-            f"Growth: MRR went from $18k to $44k in 6 months — 144% in H1.\n"
-            f"MoM growth rate: avg ~18% early, stabilizing to 15.8% in June as base grows.\n"
-            f"Gross margin expanding: 62.2% → 77.8% as revenue grows into fixed infrastructure costs.\n"
-            f"EBITDA trajectory: from -$1k in Jan to breakeven in June — ahead of plan."
+            "## MRR Trend — Jan to Jun 2026\n\n"
+            "| Month | MRR | ARR | Customers | Gross Margin | EBITDA |\n"
+            "|-------|----:|----:|----------:|-------------:|-------:|\n"
+            + rows + "\n\n"
+            "### Key takeaways\n"
+            "• MRR grew **144%** in H1 — from $18k to $44k in 6 months\n"
+            "• MoM growth avg ~18% early, stabilizing to 15.8% as base grows\n"
+            "• Gross margin expanded **62.2% → 77.8%** as revenue scales into fixed infra costs\n"
+            "• EBITDA trajectory: from −$1k in Jan to **breakeven** in June — ahead of plan"
         )
         chart = {
             "type": "bar",
@@ -318,21 +320,22 @@ async def ask(req: AskRequest):
     elif any(w in q for w in ["gross margin", "cogs", "cost of goods", "cost of revenue"]):
         cogs = md.COGS_BREAKDOWN_JUNE
         answer = (
-            "COGS breakdown — June 2026:\n\n"
-            f"  Cloud infrastructure\n"
-            f"    AWS compute:     ${cogs['cloud_infrastructure']['aws_compute']:>6,.0f}\n"
-            f"    AWS RDS:         ${cogs['cloud_infrastructure']['aws_rds']:>6,.0f}\n"
-            f"    AWS S3:          ${cogs['cloud_infrastructure']['aws_s3']:>6,.0f}\n"
-            f"    Cloudflare:      ${cogs['cloud_infrastructure']['cloudflare']:>6,.0f}\n"
-            f"    Subtotal:        ${cogs['cloud_infrastructure']['subtotal']:>6,.0f}\n\n"
-            f"  Payment processing (Stripe fees):  ${cogs['payment_processing']['stripe_fees']:>6,.0f}\n\n"
-            f"  Customer support\n"
-            f"    Zendesk:         ${cogs['customer_support']['zendesk']:>6,.0f}\n"
-            f"    CS salary alloc: ${cogs['customer_support']['cs_salary_alloc']:>6,.0f}\n"
-            f"    Subtotal:        ${cogs['customer_support']['subtotal']:>6,.0f}\n\n"
-            f"  DevOps tools (Datadog, GitHub, Sentry): ${cogs['devops_tools']['subtotal']:>6,.0f}\n\n"
-            f"  Total COGS: ${cogs['total_cogs']:,.0f}\n"
-            f"  Gross Margin: {cogs['gross_margin_pct']}% (MRR $44,000 − COGS ${cogs['total_cogs']:,.0f} = ${44000 - cogs['total_cogs']:,.0f})"
+            "## COGS Breakdown — June 2026\n\n"
+            "| Category | Item | Amount |\n"
+            "|----------|------|-------:|\n"
+            f"| Cloud Infra | AWS Compute | ${cogs['cloud_infrastructure']['aws_compute']:,} |\n"
+            f"| Cloud Infra | AWS RDS | ${cogs['cloud_infrastructure']['aws_rds']:,} |\n"
+            f"| Cloud Infra | AWS S3 | ${cogs['cloud_infrastructure']['aws_s3']:,} |\n"
+            f"| Cloud Infra | Cloudflare | ${cogs['cloud_infrastructure']['cloudflare']:,} |\n"
+            f"| **Cloud Infra Total** | | **${cogs['cloud_infrastructure']['subtotal']:,}** |\n"
+            f"| Payment Processing | Stripe Fees | ${cogs['payment_processing']['stripe_fees']:,} |\n"
+            f"| Customer Support | Zendesk | ${cogs['customer_support']['zendesk']:,} |\n"
+            f"| Customer Support | CS Salary Alloc | ${cogs['customer_support']['cs_salary_alloc']:,} |\n"
+            f"| **Support Total** | | **${cogs['customer_support']['subtotal']:,}** |\n"
+            f"| DevOps Tools | Datadog, GitHub, Sentry | ${cogs['devops_tools']['subtotal']:,} |\n"
+            f"| **Total COGS** | | **${cogs['total_cogs']:,}** |\n"
+            f"| **Gross Profit** | MRR $44,000 − COGS | **${44000 - cogs['total_cogs']:,}** |\n"
+            f"| **Gross Margin** | | **{cogs['gross_margin_pct']}%** |\n"
         )
         chart = {
             "type": "donut",
@@ -349,27 +352,30 @@ async def ask(req: AskRequest):
 
     elif any(w in q for w in ["opex", "operating expense", "spend breakdown", "spend"]):
         opex = md.OPEX_BREAKDOWN_JUNE
+        rd = opex['research_and_development']
+        sm = opex['sales_and_marketing']
+        ga = opex['general_and_administrative']
+        ie = opex['interest_expense']
         answer = (
-            "OpEx breakdown — June 2026:\n\n"
-            f"  R&D (Engineering)\n"
-            f"    Engineering salaries: ${opex['research_and_development']['engineering_salaries']:>7,.0f}\n"
-            f"    Tools (Linear, Figma, Cursor): ${opex['research_and_development']['linear_figma_cursor']:>4,.0f}\n"
-            f"    Subtotal: ${opex['research_and_development']['subtotal']:>7,.0f}  ({opex['research_and_development']['pct_of_revenue']}% of revenue)\n\n"
-            f"  Sales & Marketing\n"
-            f"    AE salaries:     ${opex['sales_and_marketing']['ae_salaries']:>7,.0f}\n"
-            f"    Mktg manager:    ${opex['sales_and_marketing']['marketing_manager']:>7,.0f}\n"
-            f"    LinkedIn/Google: ${opex['sales_and_marketing']['linkedin_google_ads']:>7,.0f}\n"
-            f"    HubSpot + tools: ${opex['sales_and_marketing']['hubspot_crm'] + opex['sales_and_marketing']['apollo_loom_other']:>7,.0f}\n"
-            f"    Subtotal: ${opex['sales_and_marketing']['subtotal']:>7,.0f}  ({opex['sales_and_marketing']['pct_of_revenue']}% of revenue)\n\n"
-            f"  G&A\n"
-            f"    CEO/CTO draws:   ${opex['general_and_administrative']['ceo_cto_draws']:>7,.0f}\n"
-            f"    Finance/Ops:     ${opex['general_and_administrative']['finance_ops']:>7,.0f}\n"
-            f"    WeWork rent:     ${opex['general_and_administrative']['wework_rent']:>7,.0f}\n"
-            f"    Insurance/legal: ${opex['general_and_administrative']['insurance'] + opex['general_and_administrative']['legal_misc']:>7,.0f}\n"
-            f"    Carta + tools:   ${opex['general_and_administrative']['carta'] + opex['general_and_administrative']['notion'] + opex['general_and_administrative']['google_workspace'] + opex['general_and_administrative']['accounting_software']:>7,.0f}\n"
-            f"    Subtotal: ${opex['general_and_administrative']['subtotal']:>7,.0f}  ({opex['general_and_administrative']['pct_of_revenue']}% of revenue)\n\n"
-            f"  Interest expense (convertible note): ${opex['interest_expense']['convertible_note']:>5,.0f}\n\n"
-            f"  Total OpEx: ${opex['total_opex']:,.0f}"
+            "## OpEx Breakdown — June 2026\n\n"
+            "| Department | Item | Amount | % Revenue |\n"
+            "|------------|------|-------:|----------:|\n"
+            f"| R&D | Engineering Salaries | ${rd['engineering_salaries']:,} | |\n"
+            f"| R&D | Tools (Linear, Figma, Cursor) | ${rd['linear_figma_cursor']:,} | |\n"
+            f"| **R&D Total** | | **${rd['subtotal']:,}** | **{rd['pct_of_revenue']}%** |\n"
+            f"| Sales & Marketing | AE Salaries | ${sm['ae_salaries']:,} | |\n"
+            f"| Sales & Marketing | Marketing Manager | ${sm['marketing_manager']:,} | |\n"
+            f"| Sales & Marketing | LinkedIn / Google Ads | ${sm['linkedin_google_ads']:,} | |\n"
+            f"| Sales & Marketing | HubSpot + Tools | ${sm['hubspot_crm'] + sm['apollo_loom_other']:,} | |\n"
+            f"| **S&M Total** | | **${sm['subtotal']:,}** | **{sm['pct_of_revenue']}%** |\n"
+            f"| G&A | CEO / CTO Draws | ${ga['ceo_cto_draws']:,} | |\n"
+            f"| G&A | Finance / Ops | ${ga['finance_ops']:,} | |\n"
+            f"| G&A | WeWork Rent | ${ga['wework_rent']:,} | |\n"
+            f"| G&A | Insurance + Legal | ${ga['insurance'] + ga['legal_misc']:,} | |\n"
+            f"| G&A | Carta + SaaS Tools | ${ga['carta'] + ga['notion'] + ga['google_workspace'] + ga['accounting_software']:,} | |\n"
+            f"| **G&A Total** | | **${ga['subtotal']:,}** | **{ga['pct_of_revenue']}%** |\n"
+            f"| Interest | Convertible Note | ${ie['convertible_note']:,} | |\n"
+            f"| **Total OpEx** | | **${opex['total_opex']:,}** | **100%** |\n"
         )
         chart = {
             "type": "donut",
@@ -386,22 +392,23 @@ async def ask(req: AskRequest):
 
     elif any(w in q for w in ["team", "headcount", "people", "employee", "who", "staff"]):
         hc = md.HEADCOUNT
-        by_dept = {}
-        for h in hc:
-            by_dept.setdefault(h["dept"], []).append(h)
-        lines = []
-        for dept, people in by_dept.items():
-            lines.append(f"\n  {dept}:")
-            for h in people:
-                lines.append(f"    {h['name']:15s}  {h['title']:35s}  ${h['salary_annual']:,}/yr  Since {h['start_date']}")
         summary = md.HEADCOUNT_SUMMARY
+        rows = "\n".join(
+            f"| {h['name']} | {h['title']} | {h['dept']} | ${h['salary_annual']:,} | {h['start_date']} |"
+            for h in hc
+        )
         answer = (
-            f"Team — {summary['total']} people as of Jun 30 2026:\n"
-            + "".join(lines)
-            + f"\n\n  Total salary (annual): ${summary['total_salary_annual']:,.0f}\n"
-            f"  Avg tenure: {summary['avg_tenure_months']} months\n\n"
-            "Planned hires H2 2026: 2 AEs (Sep), 1 Sr Engineer + 1 CSM (Oct).\n"
-            "CEO and CTO on below-market draws — compensated via equity (28% and 22%)."
+            f"## Team — {summary['total']} People as of Jun 2026\n\n"
+            "| Name | Title | Dept | Annual Salary | Start Date |\n"
+            "|------|-------|------|-------------:|-----------:|\n"
+            + rows + "\n\n"
+            f"### Summary\n"
+            f"• Total annual payroll: **${summary['total_salary_annual']:,.0f}**\n"
+            f"• Avg tenure: **{summary['avg_tenure_months']} months**\n"
+            f"• CEO + CTO on below-market draws — compensated via equity (28% and 22%)\n\n"
+            "### Planned hires H2 2026\n"
+            "• 2 × Account Executive — Sep 2026\n"
+            "• 1 × Sr Engineer + 1 × CSM — Oct 2026"
         )
 
     elif any(w in q for w in ["what if", "if revenue", "if opex", "if churn", "stress", "scenario", "decrease", "decreas", "drop", "fall"]) and any(w in q for w in ["%", "percent"]):

@@ -59,7 +59,8 @@
   .welcome-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #2a2060, #1a1535); border: 1px solid var(--border2); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 22px; }
   .welcome-title { font-size: 22px; font-weight: 600; letter-spacing: -.03em; margin-bottom: 8px; }
   .welcome-sub { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 360px; }
-  .prompts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; padding: 12px 24px 16px; flex-shrink: 0; }
+  #prompts-wrap { display: flex; justify-content: center; padding: 8px 24px 16px; flex-shrink: 0; }
+  .prompts-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; max-width: 840px; }
   .prompt-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 13px 14px; cursor: pointer; text-align: left; transition: all .2s; font-family: var(--font); }
   .prompt-chip:hover { border-color: var(--accent); background: #14142a; transform: translateY(-1px); }
   .chip-label { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.4; }
@@ -163,7 +164,7 @@
       </div>
     </div>
 
-    <div class="prompts-grid">
+    <div id="prompts-wrap"><div class="prompts-grid">
       <button class="prompt-chip" onclick="sendPrompt(this.dataset.q)" data-q="Am I ready to raise?">
         <div class="chip-label">Am I ready to raise?</div>
         <div class="chip-meta">Series A readiness check</div>
@@ -212,7 +213,7 @@
         <div class="chip-label">YoY variance</div>
         <div class="chip-meta">Jun 2025 vs Jun 2026 — P&amp;L delta</div>
       </button>
-    </div>
+    </div></div>
 
     <div id="bottom">
       <div class="input-row">

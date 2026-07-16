@@ -569,26 +569,33 @@ async def ask(req: AskRequest):
     elif any(w in q for w in ["unit economics", "ltv", "cac", "payback"]):
         ue = md.UNIT_ECONOMICS
         cac_ch = md.CAC_BY_CHANNEL
+        best = min(cac_ch, key=lambda c: c['cac'])
         answer = (
-            "Unit economics — June 2026\n\n"
-            f"  Avg MRR per customer:  ${ue['avg_mrr_per_customer']:,.0f}/mo\n"
-            f"  Gross margin:          {ue['gross_margin_pct']}%\n"
-            f"  Monthly churn:         {ue['monthly_churn_rate_pct']}%\n"
-            f"  Avg customer life:     {ue['avg_customer_life_months']:.0f} months\n"
-            f"  LTV:                   ${ue['ltv']:,.0f}\n"
-            f"  Blended CAC:           ${ue['blended_cac']:,.0f}\n"
-            f"  LTV:CAC ratio:         {ue['ltv_cac_ratio']}x  (benchmark: >3x)\n"
-            f"  CAC payback:           {ue['cac_payback_months']} months\n"
-            f"  NRR:                   {ue['nrr_pct']}%\n"
-            f"  Magic Number:          {ue['magic_number']}\n"
-            f"  Rule of 40:            {ue['rule_of_40']}\n\n"
-            "CAC by channel:\n"
+            "## Unit Economics — June 2026\n\n"
+            "| Metric | Value | Benchmark |\n"
+            "|--------|------:|----------:|\n"
+            f"| Avg MRR / customer | ${md.CURRENT_MRR // md.ACTIVE_CUSTOMERS:,}/mo | — |\n"
+            f"| Gross Margin | **{md.GROSS_MARGIN_PCT}%** | >70% ✓ |\n"
+            f"| Monthly Churn | **{md.MONTHLY_CHURN_RATE*100:.1f}%** | <2% ✓ |\n"
+            f"| NRR | **{md.NET_REVENUE_RETENTION*100:.1f}%** | >100% ✓ |\n"
+            f"| LTV | **${ue['ltv']:,}** | — |\n"
+            f"| Blended CAC | **${ue['blended_cac']:,}** | — |\n"
+            f"| LTV:CAC | **{md.LTV_CAC_RATIO}x** | >3x ✓ |\n"
+            f"| CAC Payback | **{ue['cac_payback_months']} months** | <18mo ✓ |\n"
+            f"| Magic Number | **{ue['magic_number']}** | >0.75 |\n"
+            f"| Rule of 40 | **{ue['rule_of_40']}** | >40 |\n\n"
+            "### CAC by channel\n\n"
+            "| Channel | CAC | LTV:CAC | Payback |\n"
+            "|---------|----:|--------:|--------:|\n"
             + "\n".join(
-                f"  {c['channel']:20s}  CAC ${c['cac']:>6,.0f}  LTV:CAC {c['ltv_cac']}x  Payback {c['payback_months']} mo"
+                f"| {'**' + c['channel'] + '**' if c['channel'] == best['channel'] else c['channel']} "
+                f"| ${c['cac']:,} | {c['ltv_cac']}x | {c['payback_months']} mo |"
                 for c in cac_ch
             )
-            + "\n\nBest channel: Founder-led sales (CAC $1,400, 41.9x LTV:CAC). "
-            "Scale this before spending more on outbound."
+            + f"\n\n### Bottom line\n"
+            f"• Best channel: **{best['channel']}** (CAC ${best['cac']:,}, {best['ltv_cac']}x LTV:CAC) — scale this first\n"
+            f"• LTV:CAC of {md.LTV_CAC_RATIO}x exceeds Series A benchmark of 3x\n"
+            f"• NRR of {md.NET_REVENUE_RETENTION*100:.1f}% means existing customers are growing — strong retention flywheel"
         )
 
     elif any(w in q for w in ["customer", "roster", "account", "logo"]):

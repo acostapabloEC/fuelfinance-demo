@@ -297,7 +297,7 @@ async def ask(req: AskRequest):
             "yformat": "$k",
         }
 
-    elif any(w in q for w in ["drives", "driver", "what drove", "revenue growth", "growth come from", "new business", "expansion", "mrr bridge", "mrr movement"]):
+    elif any(w in q for w in ["drives", "driver", "what drove", "revenue growth", "growth come from", "new business", "mrr bridge", "mrr movement"]) and "opex" not in q and "cogs" not in q:
         answer = (
             "## Revenue Drivers — June 2026\n\n"
             "### MRR bridge (May → June)\n\n"
@@ -372,7 +372,7 @@ async def ask(req: AskRequest):
             "• Q4 2025 at **120% NRR** — healthy upsell motion emerging across newer cohorts"
         )
 
-    elif any(w in q for w in ["gross margin", "cogs", "cost of goods", "cost of revenue"]):
+    elif any(w in q for w in ["gross margin", "cogs", "cost of goods", "cost of revenue", "cogs composition"]):
         cogs = md.COGS_BREAKDOWN_JUNE
         answer = (
             "## COGS Breakdown — June 2026\n\n"
@@ -405,7 +405,7 @@ async def ask(req: AskRequest):
             "yformat": "$",
         }
 
-    elif any(w in q for w in ["opex", "operating expense", "spend breakdown", "spend"]):
+    elif any(w in q for w in ["opex", "operating expense", "spend breakdown", "spend", "opex composition"]):
         opex = md.OPEX_BREAKDOWN_JUNE
         rd = opex['research_and_development']
         sm = opex['sales_and_marketing']
